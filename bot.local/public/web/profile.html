@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестовый профиль</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #18222d;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .profile-info {
+            background-color: #2a3a4a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+            .profile-info h2 {
+                margin-top: 0;
+            }
+
+        .button {
+            background-color: #3d8af7;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            display: inline-block;
+            margin: 5px;
+        }
+
+            .button:hover {
+                background-color: #2c6fd6;
+            }
+    </style>
+</head>
+<body>
+    <div class="profile-info">
+        <h2>Тестовый профиль</h2>
+        <img id="chat_id" width="100px" height="100px">
+        <p><strong>Никнейм:</strong> <span id="first-name"></span></p>
+        <p><strong>Роль:</strong> <span id="role"></span></p>
+
+    </div>
+    <a href="https://bot.local/web/task_list.html" class="button">Назад</a>
+
+    <script>
+        //<p><strong>Очки:</strong> <span id="points"></span></p>
+        //<p><strong>Фамилия:</strong> <span id="last-name"></span></p>
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+
+        fetch(`http://localhost:5000/api/profile?username=${username}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка сети');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    document.getElementById("chat_id").src = 'avatar/1616152269.jpg';
+                    document.getElementById('first-name').textContent = data.first_name;
+                    //document.getElementById('last-name').textContent = data.last_name;
+                    document.getElementById('role').textContent = data.role;
+                    //document.getElementById('points').textContent = data.points;
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
+    </script>
+</body>
+</html>

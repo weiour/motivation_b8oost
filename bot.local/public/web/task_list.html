@@ -1,0 +1,325 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motivation B8oost</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #18222d;
+            color: #ffffff;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #2a3a4a;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+            }
+
+        .menu-button {
+            background-color: #3d8af7;
+            color: white;
+            padding: 10px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .menu-button:hover {
+                background-color: #2c6fd6;
+            }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 20px;
+            top: 60px;
+            background-color: #2a3a4a;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+            .dropdown-menu button {
+                display: block;
+                width: 100%;
+                padding: 10px 20px;
+                text-align: left;
+                background: none;
+                border: none;
+                color: white;
+                cursor: pointer;
+            }
+
+                .dropdown-menu button:hover {
+                    background-color: #3d8af7;
+                }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .task-card {
+            background-color: #2a3a4a;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+            .task-card h3 {
+                margin-top: 0;
+                color: #3d8af7;
+            }
+
+            .task-card p {
+                margin: 5px 0;
+            }
+
+        .button {
+            background-color: #3d8af7;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            display: inline-block;
+            margin: 5px;
+        }
+
+            .button:hover {
+                background-color: #2c6fd6;
+            }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination-info {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .edit-form {
+            background-color: #2a3a4a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+            .edit-form label {
+                display: block;
+                margin-top: 10px;
+            }
+
+            .edit-form input, .edit-form textarea {
+                width: 100%;
+                padding: 10px;
+                margin-top: 5px;
+                border-radius: 5px;
+                border: 1px solid #3d8af7;
+                background-color: #18222d;
+                color: #ffffff;
+            }
+
+            .edit-form textarea {
+                height: 100px;
+            }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Motivation B8oost</h1>
+        <button class="menu-button" onclick="toggleMenu()">| | |</button>
+        <div class="dropdown-menu" id="dropdown-menu">
+            <button onclick="openProfile()" а>Профиль</button>
+            <button onclick="openShop()">Магазин</button>
+            <button onclick="openEmployeeList()">Список сотрудников</button>
+        </div>
+    </div>
+    <div class="task-list" id="task-list">
+    </div>
+    <div class="pagination-info" id="pagination-info">
+    </div>
+    <div class="pagination">
+        <button class="button" id="prev-page" onclick="loadPreviousPage()">Назад</button>
+        <button class="button" id="next-page" onclick="loadNextPage()">Вперед</button>
+    </div>
+
+    <script>
+
+        let currentPage = 1;
+        let totalPages = 1;
+
+        function loadTasks(page) {
+            fetch(`http://localhost:5000/api/tasks?page=${page}&limit=5`)
+                .then(response => response.json())
+                .then(data => {
+                    const taskList = document.getElementById('task-list');
+                    taskList.innerHTML = ''; 
+                    data.tasks.forEach(task => {
+                        const taskCard = document.createElement('div');
+                        taskCard.className = 'task-card';
+                        taskCard.innerHTML = `
+                                <h3>${task.title}</h3>
+                                <p><strong>Описание:</strong> ${task.description}</p>
+                                <p><strong>Количество очков:</strong> ${task.reward} очков</p>
+                                <p><strong>Создал:</strong> ${task.created_by} (${task.created_at})</p>
+                                <p><strong>Выполнили:</strong> ${task.completed_by} сотрудников</p>
+                                <button class="button" onclick="editTask(${task.id})">Редактировать</button>
+                                <button class="button" onclick="deleteTask(${task.id})">Удалить</button>
+                            `;
+                        taskList.appendChild(taskCard);
+                    });
+
+                    currentPage = data.page;
+                    totalPages = data.total_pages;
+                    document.getElementById('pagination-info').textContent = `Страница ${currentPage} из ${totalPages}`;
+                    document.getElementById('prev-page').disabled = currentPage === 1;
+                    document.getElementById('next-page').disabled = currentPage === totalPages;
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Не удалось загрузить задачи.');
+                });
+        }
+
+        function loadPreviousPage() {
+            if (currentPage > 1) {
+                loadTasks(currentPage - 1);
+            }
+        }
+
+        function loadNextPage() {
+            if (currentPage < totalPages) {
+                loadTasks(currentPage + 1);
+            }
+        }
+
+        function deleteTask(taskId) {
+            if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                fetch(`http://localhost:5000/api/tasks/${taskId}/delete`, {
+                    method: 'DELETE'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            alert(data.message);
+                            loadTasks(currentPage); 
+                        } else {
+                            alert(data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка:', error);
+                        alert('Не удалось удалить задачу.');
+                    });
+            }
+        }
+
+        function editTask(taskId) {
+            fetch(`http://localhost:5000/api/tasks/${taskId}`)
+                .then(response => response.json())
+                .then(task => {
+                    const editForm = `
+                            <div class="edit-form">
+                                <h3>Редактирование задачи</h3>
+                                <label for="edit-title">Название:</label>
+                                <input type="text" id="edit-title" value="${task.title}">
+                                <label for="edit-description">Описание:</label>
+                                <textarea id="edit-description">${task.description}</textarea>
+                                <label for="edit-reward">Награда:</label>
+                                <input type="number" id="edit-reward" value="${task.reward}">
+                                <button class="button" onclick="saveTask(${taskId})">Сохранить</button>
+                                <button class="button" onclick="cancelEdit()">Отмена</button>
+                            </div>
+                        `;
+                    document.getElementById('task-list').innerHTML = editForm;
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Не удалось загрузить данные задачи.');
+                });
+        }
+
+        function saveTask(taskId) {
+            const title = document.getElementById('edit-title').value;
+            const description = document.getElementById('edit-description').value;
+            const reward = document.getElementById('edit-reward').value;
+
+            fetch(`http://localhost:5000/api/tasks/${taskId}/edit`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: title,
+                    description: description,
+                    reward: reward
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        loadTasks(currentPage);
+                    } else {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Не удалось обновить задачу.');
+                });
+        }
+
+        function cancelEdit() {
+            loadTasks(currentPage);
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('dropdown-menu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', (event) => {
+            const menu = document.getElementById('dropdown-menu');
+            const menuButton = document.querySelector('.menu-button');
+            if (!menu.contains(event.target) && !menuButton.contains(event.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        function openProfile() {
+            window.open("https://bot.local/web/profile.html?username=makssakov", "_self");
+            //window.open(username);
+            //window.open("https://bot.local/web/profile.html?username=" + username, "_self");
+        }
+
+        function openShop() {
+            alert('Открываем магазин...');
+        }
+
+        function openEmployeeList() {
+            alert('Открываем список сотрудников...');
+        }
+
+        loadTasks(currentPage);
+    </script>
+</body>
+</html>
