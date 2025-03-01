@@ -3,25 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тестовый профиль</title>
+    <title>Профиль</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #18222d;
             color: #ffffff;
+            margin: 0;
             padding: 20px;
         }
 
-        .profile-info {
+        .header {
+            background-color: #2a3a4a;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+                color: #3d8af7;
+            }
+
+        .menu-button {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: #2a3a4a;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+            .drawer h1 {
+                font-size: 22px;
+                padding-left: 20px;
+            }
+
+            .drawer.open {
+                left: 0;
+            }
+
+            .drawer ul {
+                list-style: none;
+                padding: 0 20px 20px 20px;
+                margin: 0;
+            }
+
+                .drawer ul li {
+                    margin: 15px 0;
+                }
+
+                    .drawer ul li a {
+                        color: #ffffff;
+                        text-decoration: none;
+                        font-size: 18px;
+                        display: block;
+                        padding: 10px;
+                        border-radius: 5px;
+                        transition: background-color 0.3s ease;
+                    }
+
+                        .drawer ul li a:hover {
+                            background-color: #3d8af7;
+                        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid #3d8af7;
+            margin-bottom: 15px;
+        }
+
+        .profile-username {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .profile-stat {
+            text-align: center;
+        }
+
+            .profile-stat h3 {
+                margin: 0;
+                font-size: 18px;
+                color: #3d8af7;
+            }
+
+            .profile-stat p {
+                margin: 5px 0;
+                font-size: 24px;
+            }
+
+        .achievements {
             background-color: #2a3a4a;
             padding: 20px;
             border-radius: 10px;
-            margin-bottom: 20px;
         }
 
-            .profile-info h2 {
+            .achievements h2 {
                 margin-top: 0;
+                font-size: 18px;
+                color: #3d8af7;
             }
+
+        .achievement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .achievement-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            margin-right: 15px;
+        }
+
+        .achievement-info {
+            flex: 1;
+        }
+
+        .achievement-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .achievement-description {
+            margin: 5px 0;
+            color: #a0a0a0;
+        }
+
+        .manager-controls {
+            margin-top: 20px;
+            text-align: center;
+        }
 
         .button {
             background-color: #3d8af7;
@@ -40,44 +187,152 @@
             }
     </style>
 </head>
-<body>
-    <div class="profile-info">
-        <h2>Тестовый профиль</h2>
-        <img id="chat_id" width="100px" height="100px">
-        <p><strong>Никнейм:</strong> <span id="first-name"></span></p>
-        <p><strong>Роль:</strong> <span id="role"></span></p>
 
+<body>
+    <div class="header">
+        <h1>Профиль</h1>
+        <button class="menu-button" onclick="toggleDrawer()">☰</button>
     </div>
-    <a href="https://bot.local/web/task_list.html" class="button">Назад</a>
+
+    <div class="drawer" id="drawer">
+        <h1>Motivation B8oost</h1>
+        <ul>
+            <li><a onclick="openProfile()">Профиль</a></li>
+            <li><a onclick="openTasks()">Список задач</a></li>
+            <li><a onclick="openShop()">Магазин</a></li>
+            <li><a onclick="openEmployees()">Список работников</a></li>
+            <li><a onclick="openLeaderboard()">Рейтинг</a></li>
+        </ul>
+    </div>
+
+    <div class="profile-header">
+        <img src="" alt="Аватар" class="profile-avatar" id="profile-avatar">
+        <div class="profile-username" id="profile-username"></div>
+        <div>Компания: Фонд развития инноваций</div>
+        <div id="profile-role">Роль</div>
+    </div>
+
+    <div class="profile-stats" id="profile-stats">
+        <div class="profile-stat">
+            <h3>Очки</h3>
+            <p id="profile-points"></p>
+        </div>
+        <div class="profile-stat">
+            <h3>Рейтинг</h3>
+            <p id="profile-rank"></p>
+        </div>
+    </div>
+
+    <div class="achievements" id="achievements-section">
+        <h2>Достижения</h2>
+        <div id="achievements-list"></div>
+    </div>
+
+    <div class="manager-controls" id="manager-controls">
+        <button class="button" onclick="assignTask()">Назначить задачу</button>
+        <button class="button" onclick="giveReward()">Выдать награду</button>
+        <button class="button" onclick="manageEmployees()">Управление персоналом</button>
+    </div>
 
     <script>
-        //<p><strong>Очки:</strong> <span id="points"></span></p>
-        //<p><strong>Фамилия:</strong> <span id="last-name"></span></p>
-        const urlParams = new URLSearchParams(window.location.search);
-        const username = urlParams.get('username');
+        function getProfile() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const user = window.Telegram.WebApp.initDataUnsafe.user;
+                if (user) {
+                    const username = user.username;
+                    fetch(`http://localhost:5000/api/profile?username=${username}`)
+                        .then(response => response.json())
+                        .then(profileData => {
 
-        fetch(`http://localhost:5000/api/profile?username=${username}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Ошибка сети');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log(data);
-                if (data.error) {
-                    alert(data.error);
+                            document.getElementById('profile-avatar').src = `photo/${profileData.username}.jpg`;
+                            document.getElementById('profile-username').textContent = `${profileData.first_name} ${profileData.last_name}`;
+                            document.getElementById('profile-role').textContent = `Роль: ${profileData.role}`;
+                            document.getElementById('profile-points').textContent = profileData.points;
+
+
+                            if (profileData.role === 'manager') {
+
+                                document.getElementById('manager-controls').style.display = 'block';
+                                document.getElementById('achievements-section').style.display = 'none';
+                                document.getElementById('profile-stats').style.display = 'none';
+                            } else {
+
+                                document.getElementById('manager-controls').style.display = 'none';
+                                document.getElementById('achievements-section').style.display = 'block';
+                                document.getElementById('profile-stats').style.display = 'flex';
+
+
+                                document.getElementById('profile-rank').textContent = `#${profileData.rank}`;
+
+
+                                const achievementsList = document.getElementById('achievements-list');
+                                achievementsList.innerHTML = '';
+
+                                profileData.achievements.forEach(achievement => {
+                                    const achievementItem = document.createElement('div');
+                                    achievementItem.className = 'achievement';
+                                    achievementItem.innerHTML = `
+                                                <img src="icons/${achievement.icon}" alt="${achievement.title}" class="achievement-icon">
+                                                <div class="achievement-info">
+                                                    <p class="achievement-title">${achievement.title}</p>
+                                                    <p class="achievement-description">${achievement.description}</p>
+                                                    ${achievement.achieved ? `<p class="achievement-date">Получено: ${achievement.achieved_at}</p>` : ''}
+                                                </div>
+                                            `;
+                                    achievementsList.appendChild(achievementItem);
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Ошибка:', error);
+                            alert('Не удалось загрузить данные профиля.');
+                        });
                 } else {
-                    document.getElementById("chat_id").src = 'avatar/1616152269.jpg';
-                    document.getElementById('first-name').textContent = data.first_name;
-                    //document.getElementById('last-name').textContent = data.last_name;
-                    document.getElementById('role').textContent = data.role;
-                    //document.getElementById('points').textContent = data.points;
+                    alert('Данные пользователя недоступны.');
                 }
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-            });
+            } else {
+                alert('Telegram WebApp недоступен. Откройте приложение через Telegram.');
+            }
+        }
+
+        function openAddEmployeeForm() {
+            document.getElementById('add-employee-form').style.display = 'block';
+        }
+        function cancelAddEmployee() {
+            document.getElementById('add-employee-form').style.display = 'none';
+        }
+
+        function openLeaderboard() {
+            window.open("https://bot.local/web/leaderboard.html", "_self");
+        }
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('drawer');
+            drawer.classList.toggle('open');
+        }
+
+        function openProfile() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const user = window.Telegram.WebApp.initDataUnsafe.user;
+                if (user) {
+                    window.open("https://bot.local/web/profile.html?username=" + user.username, "_self");
+                } else {
+                    alert('Ошибка');
+                }
+            } else {
+                alert('Откройте через Telegram.');
+            }
+        }
+
+        function openTasks() {
+            window.open("https://bot.local/web/task_list.html", "_self");
+        }
+
+        function openEmployees() {
+            window.open("https://bot.local/web/employees.html", "_self");
+        }
+
+        getProfile();
     </script>
 </body>
 </html>

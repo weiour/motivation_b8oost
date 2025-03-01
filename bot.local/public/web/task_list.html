@@ -3,89 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motivation B8oost</title>
+    <title>Доска заданий</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #18222d;
             color: #ffffff;
-            padding: 20px;
             margin: 0;
+            padding: 0;
         }
 
         .header {
+            background-color: #2a3a4a;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #2a3a4a;
-            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             border-radius: 10px;
-            margin-bottom: 20px;
         }
 
             .header h1 {
                 margin: 0;
                 font-size: 24px;
+                color: #3d8af7;
             }
 
         .menu-button {
-            background-color: #3d8af7;
-            color: white;
-            padding: 10px 10px;
+            background: none;
             border: none;
-            border-radius: 5px;
+            color: #ffffff;
+            font-size: 30px;
             cursor: pointer;
         }
 
-            .menu-button:hover {
-                background-color: #2c6fd6;
-            }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            right: 20px;
-            top: 60px;
+        .drawer {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100%;
             background-color: #2a3a4a;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s ease;
             z-index: 1000;
         }
 
-            .dropdown-menu button {
-                display: block;
-                width: 100%;
-                padding: 10px 20px;
-                text-align: left;
-                background: none;
-                border: none;
-                color: white;
-                cursor: pointer;
+            .drawer h1 {
+                font-size: 22px;
+                padding-left: 20px;
             }
 
-                .dropdown-menu button:hover {
-                    background-color: #3d8af7;
+            .drawer.open {
+                left: 0;
+            }
+
+            .drawer ul {
+                list-style: none;
+                padding: 0 20px 20px 20px;
+                margin: 0;
+            }
+
+                .drawer ul li {
+                    margin: 15px 0;
                 }
 
+                    .drawer ul li a {
+                        color: #ffffff;
+                        text-decoration: none;
+                        font-size: 18px;
+                        display: block;
+                        padding: 10px;
+                        border-radius: 5px;
+                        transition: background-color 0.3s ease;
+                    }
+
+                        .drawer ul li a:hover {
+                            background-color: #3d8af7;
+                        }
+
         .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            padding: 20px;
         }
 
         .task-card {
             background-color: #2a3a4a;
             padding: 15px;
             border-radius: 10px;
+            margin-bottom: 15px;
         }
 
             .task-card h3 {
                 margin-top: 0;
-                color: #3d8af7;
             }
 
             .task-card p {
                 margin: 5px 0;
+            }
+
+            .task-card .descr {
+                padding-bottom: 5px;
             }
 
         .button {
@@ -104,6 +121,19 @@
                 background-color: #2c6fd6;
             }
 
+        .button-add-task {
+            background-color: #3d8af7;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            display: inline-block;
+            margin-left: 30px;
+
+        }
+
         .pagination {
             display: flex;
             justify-content: center;
@@ -119,7 +149,7 @@
             background-color: #2a3a4a;
             padding: 20px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin: 20px 20px;
         }
 
             .edit-form label {
@@ -128,7 +158,7 @@
             }
 
             .edit-form input, .edit-form textarea {
-                width: 100%;
+                width: 97%;
                 padding: 10px;
                 margin-top: 5px;
                 border-radius: 5px;
@@ -141,19 +171,29 @@
                 height: 100px;
             }
     </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <div class="header">
-        <h1>Motivation B8oost</h1>
-        <button class="menu-button" onclick="toggleMenu()">| | |</button>
-        <div class="dropdown-menu" id="dropdown-menu">
-            <button onclick="openProfile()" а>Профиль</button>
-            <button onclick="openShop()">Магазин</button>
-            <button onclick="openEmployeeList()">Список сотрудников</button>
-        </div>
+        <h1>Доска заданий</h1>
+        <button class="menu-button" onclick="toggleDrawer()">☰</button>
     </div>
+
+    <div class="drawer" id="drawer">
+        <h1>Motivation B8oost</h1>
+        <ul>
+            <li><a onclick="openProfile()">Профиль</a></li>
+            <li><a onclick="openTasks()">Список задач</a></li>
+            <li><a onclick="openShop()">Магазин</a></li>
+            <li><a onclick="openEmployees()">Список работников</a></li>
+            <li><a onclick="openLeaderboard()">Рейтинг</a></li>
+        </ul>
+    </div>
+
     <div class="task-list" id="task-list">
     </div>
+    <button class="button-add-task" id="add-task-button" onclick="openTaskForm()">Добавить задачу</button>
+
     <div class="pagination-info" id="pagination-info">
     </div>
     <div class="pagination">
@@ -161,35 +201,119 @@
         <button class="button" id="next-page" onclick="loadNextPage()">Вперед</button>
     </div>
 
-    <script>
+    <div class="edit-form" id="task-form" style="display: none;">
+        <h3>Добавить задачу</h3>
+        <label for="task-title">Название:</label>
+        <input type="text" id="task-title">
+        <label for="task-description">Описание:</label>
+        <textarea id="task-description"></textarea>
+        <label for="task-reward">Награда:</label>
+        <input type="number" id="task-reward">
+        <button class="button" onclick="saveTask()">Сохранить</button>
+        <button class="button" onclick="cancelTaskForm()">Отмена</button>
+    </div>
 
+    <script>
         let currentPage = 1;
         let totalPages = 1;
+
+
+
+        function openTaskForm() {
+            document.getElementById('task-form').style.display = 'block';
+            document.getElementById('add-task-button').style.display = 'none';
+        }
+
+        function cancelTaskForm() {
+            document.getElementById('task-form').style.display = 'none';
+            document.getElementById('add-task-button').style.display = 'block';
+        }
+
+        function saveTask() {
+            const title = document.getElementById('task-title').value;
+            const description = document.getElementById('task-description').value;
+            const reward = document.getElementById('task-reward').value;
+
+            fetch('http://localhost:5000/api/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: title,
+                    description: description,
+                    reward: reward,
+                    created_by: 'Руководитель'
+                }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        cancelTaskForm();
+                        loadTasks(currentPage);
+                    } else {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Не удалось добавить задачу.');
+                });
+        }
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('drawer');
+            drawer.classList.toggle('open');
+        }
+
+        function openProfile() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const user = window.Telegram.WebApp.initDataUnsafe.user;
+                if (user) {
+                    window.open("https://bot.local/web/profile.html?username=" + user.username, "_self");
+                } else {
+                    alert('Ошибка');
+                }
+            } else {
+                alert('Откройте через Telegram.');
+            }
+        }
+
+        function openShop() {
+            window.open("https://bot.local/web/shop.html", "_self");
+        }
+
+        function openEmployees() {
+            window.open("https://bot.local/web/employees.html", "_self"); s
+        }
 
         function loadTasks(page) {
             fetch(`http://localhost:5000/api/tasks?page=${page}&limit=5`)
                 .then(response => response.json())
                 .then(data => {
                     const taskList = document.getElementById('task-list');
-                    taskList.innerHTML = ''; 
+                    taskList.innerHTML = '';
+
                     data.tasks.forEach(task => {
                         const taskCard = document.createElement('div');
                         taskCard.className = 'task-card';
                         taskCard.innerHTML = `
-                                <h3>${task.title}</h3>
-                                <p><strong>Описание:</strong> ${task.description}</p>
-                                <p><strong>Количество очков:</strong> ${task.reward} очков</p>
-                                <p><strong>Создал:</strong> ${task.created_by} (${task.created_at})</p>
-                                <p><strong>Выполнили:</strong> ${task.completed_by} сотрудников</p>
-                                <button class="button" onclick="editTask(${task.id})">Редактировать</button>
-                                <button class="button" onclick="deleteTask(${task.id})">Удалить</button>
-                            `;
+                                                <h3>${task.title}</h3>
+                                                <p class="descr""><strong></strong> ${task.description}</p>
+                                                <p><strong>Награда:</strong> ${task.reward} очков</p>
+                                                <p><strong>Создано:</strong> ${task.created_by} (${task.created_at})</p>
+                                                <p><strong>Выполнили:</strong> ${task.completed_by} сотрудников</p>
+                                                <button class="button" onclick="editTask(${task.id})">Редактировать</button>
+                                                <button class="button" onclick="deleteTask(${task.id})">Удалить</button>
+                                            `;
                         taskList.appendChild(taskCard);
                     });
 
                     currentPage = data.page;
                     totalPages = data.total_pages;
                     document.getElementById('pagination-info').textContent = `Страница ${currentPage} из ${totalPages}`;
+
                     document.getElementById('prev-page').disabled = currentPage === 1;
                     document.getElementById('next-page').disabled = currentPage === totalPages;
                 })
@@ -220,7 +344,7 @@
                     .then(data => {
                         if (data.message) {
                             alert(data.message);
-                            loadTasks(currentPage); 
+                            loadTasks(currentPage);
                         } else {
                             alert(data.error);
                         }
@@ -237,22 +361,22 @@
                 .then(response => response.json())
                 .then(task => {
                     const editForm = `
-                            <div class="edit-form">
-                                <h3>Редактирование задачи</h3>
-                                <label for="edit-title">Название:</label>
-                                <input type="text" id="edit-title" value="${task.title}">
-                                <label for="edit-description">Описание:</label>
-                                <textarea id="edit-description">${task.description}</textarea>
-                                <label for="edit-reward">Награда:</label>
-                                <input type="number" id="edit-reward" value="${task.reward}">
-                                <button class="button" onclick="saveTask(${taskId})">Сохранить</button>
-                                <button class="button" onclick="cancelEdit()">Отмена</button>
-                            </div>
-                        `;
+                                <div class="edit-form">
+                                    <h3>Редактирование задачи</h3>
+                                    <label for="edit-title">Название:</label>
+                                    <input type="text" id="edit-title" value="${task.title}">
+                                    <label for="edit-description">Описание:</label>
+                                    <textarea id="edit-description">${task.description}</textarea>
+                                    <label for="edit-reward">Награда:</label>
+                                    <input type="number" id="edit-reward" value="${task.reward}">
+                                    <button class="button" onclick="saveTask(${task.id})">Сохранить</button>
+                                    <button class="button" onclick="cancelEdit()">Отмена</button>
+                                </div>
+                            `;
                     document.getElementById('task-list').innerHTML = editForm;
                 })
                 .catch(error => {
-                    console.error('Ошибка:', error);
+                    console.error(error);
                     alert('Не удалось загрузить данные задачи.');
                 });
         }
@@ -261,6 +385,8 @@
             const title = document.getElementById('edit-title').value;
             const description = document.getElementById('edit-description').value;
             const reward = document.getElementById('edit-reward').value;
+
+            console.log('Отправляемые данные:', { title, description, reward });
 
             fetch(`http://localhost:5000/api/tasks/${taskId}/edit`, {
                 method: 'PUT',
@@ -286,40 +412,20 @@
                     console.error('Ошибка:', error);
                     alert('Не удалось обновить задачу.');
                 });
+
         }
 
         function cancelEdit() {
             loadTasks(currentPage);
         }
 
-        function toggleMenu() {
-            const menu = document.getElementById('dropdown-menu');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        document.addEventListener('click', (event) => {
-            const menu = document.getElementById('dropdown-menu');
-            const menuButton = document.querySelector('.menu-button');
-            if (!menu.contains(event.target) && !menuButton.contains(event.target)) {
-                menu.style.display = 'none';
-            }
-        });
-
-        function openProfile() {
-            window.open("https://bot.local/web/profile.html?username=makssakov", "_self");
-            //window.open(username);
-            //window.open("https://bot.local/web/profile.html?username=" + username, "_self");
-        }
-
-        function openShop() {
-            alert('Открываем магазин...');
-        }
-
-        function openEmployeeList() {
-            alert('Открываем список сотрудников...');
+        function openLeaderboard() {
+            window.open("https://bot.local/web/leaderboard.html", "_self");
         }
 
         loadTasks(currentPage);
     </script>
+
+
 </body>
 </html>

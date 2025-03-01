@@ -1,0 +1,221 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рейтинг лидеров</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #18222d;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #2a3a4a;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+
+            .header h1 {
+                margin: 0;
+                font-size: 24px;
+                color: #3d8af7;
+            }
+
+        .menu-button {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: #2a3a4a;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+            .drawer h1 {
+                font-size: 22px;
+                padding-left: 20px;
+            }
+
+            .drawer.open {
+                left: 0;
+            }
+
+            .drawer ul {
+                list-style: none;
+                padding: 0 20px 20px 20px;
+                margin: 0;
+            }
+
+                .drawer ul li {
+                    margin: 15px 0;
+                }
+
+                    .drawer ul li a {
+                        color: #ffffff;
+                        text-decoration: none;
+                        font-size: 18px;
+                        display: block;
+                        padding: 10px;
+                        border-radius: 5px;
+                        transition: background-color 0.3s ease;
+                    }
+
+                        .drawer ul li a:hover {
+                            background-color: #3d8af7;
+                        }
+
+        .leaderboard {
+            background-color: #2a3a4a;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+            .leaderboard h1 {
+                margin-top: 0;
+                color: #3d8af7;
+                font-size: 20px;
+            }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .leaderboard-table th, .leaderboard-table td {
+                padding: 10px;
+                text-align: left;
+                border-bottom: 1px solid #3d8af7;
+            }
+
+            .leaderboard-table th {
+                background-color: #3d8af7;
+                color: white;
+            }
+
+            .leaderboard-table tr:hover {
+                background-color: #3d8af722;
+            }
+
+        .rank {
+            width: 50px;
+            text-align: center;
+        }
+
+        .points {
+            width: 100px;
+            text-align: right;
+        }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>Доска заданий</h1>
+        <button class="menu-button" onclick="toggleDrawer()">☰</button>
+    </div>
+
+    <div class="drawer" id="drawer">
+        <h1>Motivation B8oost</h1>
+        <ul>
+            <li><a onclick="openProfile()">Профиль</a></li>
+            <li><a onclick="openTasks()">Список задач</a></li>
+            <li><a onclick="openShop()">Магазин</a></li>
+            <li><a onclick="openEmployees()">Список работников</a></li>
+            <li><a onclick="openLeaderboard()">Рейтинг</a></li>
+        </ul>
+    </div>
+
+    <div class="leaderboard">
+        <h1>Рейтинг лидеров</h1>
+        <table class="leaderboard-table" id="leaderboard-table">
+            <thead>
+                <tr>
+                    <th class="rank">Место</th>
+                    <th>Имя</th>
+                    <th class="points">Очки</th>
+                </tr>
+            </thead>
+            <tbody>
+              
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        fetch('http://localhost:5000/api/leaderboard')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка сети');
+                }
+                return response.json();
+            })
+            .then(leaderboard => {
+                const tableBody = document.querySelector('#leaderboard-table tbody');
+                leaderboard.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                                    <td class="rank">${user.rank}</td>
+                                    <td>${user.first_name} (${user.username})</td>
+                                    <td class="points">${user.points}</td>
+                                `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Не удалось загрузить рейтинг лидеров.');
+            });
+
+        function openLeaderboard() {
+            window.open("https://bot.local/web/leaderboard.html", "_self");
+        }
+
+        loadTasks(currentPage);
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('drawer');
+            drawer.classList.toggle('open');
+        }
+
+        function openProfile() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const user = window.Telegram.WebApp.initDataUnsafe.user;
+                if (user) {
+                    window.open("https://bot.local/web/profile.html?username=" + user.username, "_self");
+                } else {
+                    alert('Ошибка');
+                }
+            } else {
+                alert('Откройте через Telegram.');
+            }
+        }
+
+        function openTasks() {
+            window.open("https://bot.local/web/task_list.html", "_self");
+        }
+
+        function openEmployees() {
+            window.open("https://bot.local/web/employees.html", "_self");
+        }
+    </script>
+</body>
+</html>

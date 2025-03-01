@@ -3,18 +3,36 @@ import os
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder,  Updater, CommandHandler, CallbackContext, ContextTypes, CallbackQueryHandler, MessageHandler, filters
-from sqlalchemy import create_engine, Column, Integer, String, Sequence, DateTime
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import create_engine, Column, Integer, String, Sequence, DateTime, ForeignKey
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram import WebAppInfo
 import requests
 import urllib.request
+from dotenv import load_dotenv 
+
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 if not os.path.exists('data'):
     os.makedirs('data')
 
 engine = create_engine('sqlite:///data/users.db', echo=True)
 Base = declarative_base()
+
+class Achievement(Base):
+    __tablename__ = 'achievements'
+    id = Column(Integer, Sequence('achievement_id_seq'), primary_key=True)
+    title = Column(String(100))
+    description = Column(String(500))
+    icon = Column(String(100))
+
+class UserAchievement(Base):
+    __tablename__ = 'user_achievements'
+    id = Column(Integer, Sequence('user_achievement_id_seq'), primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    achievement_id = Column(Integer, ForeignKey('achievements.id'))
+    achieved_at = Column(DateTime, default=datetime.utcnow)  # Дата получения
 
 class User(Base):
     __tablename__ = 'users'
@@ -25,6 +43,8 @@ class User(Base):
     chat_id = Column(Integer)
     role = Column(String(50), default="employee")
     point = Column(Integer, default=0)
+    achievements = relationship('Achievement', secondary='user_achievements', backref='users')
+
 
 class Task(Base):
     __tablename__ = 'tasks'
@@ -49,7 +69,6 @@ class TaskState:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message:
         user = update.message.from_user
-        print(update)
         chat_id = update.message.chat_id
     elif update.callback_query:
         user = update.callback_query.from_user
@@ -65,27 +84,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         profile_button = InlineKeyboardButton(text="Профиль", web_app=WebAppInfo(url=f"https://bot.local/web/profile.html?username={user.username}"))
         if existing_user.role == "manager":
             keyboard = [
-                [InlineKeyboardButton("Профиль", web_app=WebAppInfo(url=f"https://bot.local/web/profile.html?username={user.username}"))],
-                [InlineKeyboardButton("Список всех задач", web_app=WebAppInfo(url='https://bot.local/web/task_list.html'))],
-                [InlineKeyboardButton("Добавить задачу", callback_data='add_task')],
-                [InlineKeyboardButton("Мои задачи", callback_data='my_tasks')],
+                [InlineKeyboardButton("Открыть мини-приложение Motivation B8oost", web_app=WebAppInfo(url=f"https://bot.local/web/profile.html?username={user.username}"))],
             ]
         else:
             keyboard = [
-                [InlineKeyboardButton("Профиль", web_app=WebAppInfo(url=f"https://bot.local/web/profile.html?username={user.username}"))],
-                [InlineKeyboardButton("Список задач", web_app=WebAppInfo(url='https://bot.local/web/task_list.html'))],
-                [InlineKeyboardButton("Магазин наград", callback_data='reward_shop')]
+                [InlineKeyboardButton("Открыть мини-приложение Motivation B8oost", web_app=WebAppInfo(url=f"https://bot.local/web/profile.html?username={user.username}"))],
             ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         if update.message:
-            await update.message.reply_text('Выберите действие:', reply_markup=reply_markup)
+            await update.message.reply_text(f'Здравствуйте, {user.first_name}', reply_markup=reply_markup)
         elif update.callback_query:
-            await update.callback_query.edit_message_text('Выберите действие:', reply_markup=reply_markup)
+            await update.callback_query.edit_message_text(f'Здравствуйте, {user.first_name}', reply_markup=reply_markup)
     else:
         if update.message:
-            await update.message.reply_text(f'Привет, {user.first_name}! Вижу вас впервые. Используй /register чтобы зарегистрироваться.')
+            await update.message.reply_text(f'Здравствуйте, {user.first_name}! Вижу вас впервые. Используйте /register чтобы зарегистрироваться.')
         elif update.callback_query:
-            await update.callback_query.edit_message_text(f'Привет, {user.first_name}! Вижу вас впервые. Используй /register чтобы зарегистрироваться.')
+            await update.callback_query.edit_message_text(f'Здравствуйте, {user.first_name}! Вижу вас впервые. Используйте /register чтобы зарегистрироваться.')
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -111,21 +125,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.edit_message_text("У вас пока нет задач.")
         else:
             await query.edit_message_text("Эта функция доступна только менеджерам.")
-    if query.data == 'profile':
-        profile_button = InlineKeyboardButton(
-            text="Открыть профиль",
-            web_app=WebAppInfo(url="https://bot.local/web/profile.html")
-        )
-        reply_markup = InlineKeyboardMarkup([[profile_button]])
-        await query.edit_message_text("Нажмите кнопку, чтобы открыть профиль:", reply_markup=reply_markup)
-
-    elif query.data == 'task_list':
-        task_list_button = InlineKeyboardButton(
-            text="Открыть список задач",
-            web_app=WebAppInfo(url="https://weiour.github.io/motivation_b8oost/test.html")
-        )
-        reply_markup = InlineKeyboardMarkup([[task_list_button]])
-        await query.edit_message_text("Нажмите кнопку, чтобы открыть список задач:", reply_markup=reply_markup)
 
 async def handle_task_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.message.chat_id
@@ -158,7 +157,7 @@ async def handle_task_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 session.add(new_task)
                 session.commit()
-                await update.message.reply_text("Задача успешно добавлена!")
+                await update.message.reply_text("Задача успешно добавлена")
                 del user_data['task_state']
                 await start(update, context)
 
@@ -169,9 +168,9 @@ async def register(update: Update, context: CallbackContext):
         photo_size = profile_photos.photos[0][-1]
         photo_file = await context.bot.get_file(photo_size.file_id)
         photo_url = photo_file.file_path
-        photo = f"avatar/{update.message.chat.id}.jpg"
+        #print(update)
+        photo = f"web/photo/{update.message.chat.username}.jpg"
         urllib.request.urlretrieve(photo_url, photo)
-        print("Фото скачано")
     else:
         pass
     user = update.message.from_user
@@ -179,7 +178,7 @@ async def register(update: Update, context: CallbackContext):
     existing_user = session.query(User).filter_by(chat_id=chat_id).first()
     
     if existing_user:
-        await update.message.reply_text('Вы уже зарегистрированы!')
+        await update.message.reply_text('Вы уже зарегистрированы')
         return
 
     new_user = User(
@@ -202,10 +201,10 @@ async def check_role(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user:
         await update.message.reply_text(f'Ваша роль: {user.role}')
     else:
-        await update.message.reply_text('Вы не зарегистрированы!')
+        await update.message.reply_text('Вы не зарегистрированы')
 
 def main():
-    application = ApplicationBuilder().token('7754043501:AAH4n4VRDsVtKI-CoxImabRiR_C9Yw9I8C8').build()
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
     start_handler = CommandHandler('start', start)
     register_handler = CommandHandler('register', register)
     check_role_handler = CommandHandler('check_role', check_role)
